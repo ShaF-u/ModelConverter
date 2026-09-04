@@ -32,15 +32,20 @@ GameEngineは現在、実行時に直接AssimpでFBXをパースしてモデル�
 
 ## 現在の配置について
 
-このプロジェクトは開発中は `GameEngine` と兄弟フォルダ(`Desktop/ModelConverter`)に置いています。完成後は `GameEngine/Tools/ModelConverter` へ移設する予定です。移設時は `ModelConverter.vcxproj` 内の `AssimpRoot` 相対パスの調整が必要です。
+このリポジトリ(ソース一式)は `GameEngine` と兄弟フォルダ(`Desktop/ModelConverter`)に独立して置いています。
+GameEngine側には**ビルド済み成果物のみ**(`ModelConverter.exe` + `assimp-vc143-mt.dll`)を `GameEngine/Tools/ModelConverter/` に配置しており、
+このリポジトリ自体をGameEngineへ移設したり、Git submoduleにする予定はありません(2026-09-04決定)。
+ツールを更新した場合は、Releaseビルドし直して成果物を手動コピーしてください(手順は `GameEngine/Tools/ModelConverter/README.md` 参照)。
 
 ## ビルド
 
 Visual Studio 2022 (v143 toolset)。
 
 ```powershell
-& "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" ModelConverter.sln /p:Configuration=Release /p:Platform=x64
+& "F:\visualstudioIDE\MSBuild\Current\Bin\MSBuild.exe" ModelConverter.sln /p:Configuration=Release /p:Platform=x64
 ```
+
+(VS2022のインストール先はマシンによって異なる。`vswhere -all -property installationPath`で確認できる。)
 
 出力は `bin\<Configuration>\ModelConverter.exe`(Assimpの動的ライブラリはビルド後イベントで自動コピーされます)。
 
