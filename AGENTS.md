@@ -8,7 +8,7 @@
 詳しい背景・フォーマット仕様は [docs/DESIGN.md](docs/DESIGN.md)、使い方は [README.md](README.md) を参照。
 
 `../GameEngine` と兄弟フォルダに置かれている前提。**このリポジトリ自体をGameEngineへ移設する予定は無い**
-(2026-09-04決定) — GameEngine側には`Tools/ModelConverter/`にビルド済み成果物(exe+dll)のみを配置する運用。
+(2026-09-04決定) — GameEngine側には`Tools/`直下にビルド済み成果物(exe+dll)のみを配置する運用。
 GameEngine本体のコーディング規約は `../GameEngine/CLAUDE.md` を参照。ただしこのプロジェクトの
 ソースファイルはすべて **UTF-8**(GameEngine本体の一部ファイルとは異なり、Shift-JIS/CP932ではない)。
 
@@ -30,10 +30,14 @@ Visual Studio 2022 (v143 toolset)。
 
 ## アーキテクチャ
 
-- `Source/main.cpp` — Assimpでモデルを読み込み(`../GameEngine/Engine/Source/Graphics/Model/ModelLoader/ModelLoader.cpp`の
-  `ProcessMesh`/`ProcessMaterial`とロジックを揃えている)、`.mdl`バイナリとして書き出す。ロジックを変更したら
-  GameEngine本体側の対応するコードとの整合性([docs/DESIGN.md](docs/DESIGN.md)参照)を意識すること。
-- `Source/BinaryModelFormat.hpp` — バイナリフォーマットの定義(マジックナンバー、バージョン、`Vertex`構造体)。
+- `Source/main.cpp` — Assimpで読み込み、`.mdl`(`RunModel`)または`.anm`(`RunAnimation`、`--anim`指定時)として書き出す。
+  メッシュ/マテリアル処理はかつてGameEngine側にあったAssimp版`ModelLoader`(2026-09-05撤去)の
+  `ProcessMesh`/`ProcessMaterial`を踏襲している。ロジックを変更したらGameEngine本体側の対応するコードとの
+  整合性([docs/DESIGN.md](docs/DESIGN.md)参照)を意識すること。
+- `Source/BinaryModelFormat.hpp` — `.mdl`フォーマットの定義(マジック、バージョン、`Vertex`、`BoneRecord`)。
+- `Source/BinaryAnimationFormat.hpp` — `.anm`フォーマットの定義(マジック、バージョン、キーフレーム構造体)。
+- 行列はすべてAssimp(列ベクトル)→DirectXMath(行ベクトル)に**転置して**書き出す(`CopyMatrixTransposed`)。
+  クォータニオンは`(x,y,z,w)`順に並べ替える。時間は秒に正規化する。詳細は[docs/DESIGN.md](docs/DESIGN.md)。
 
 ## 変更時に気をつけること
 
@@ -41,7 +45,7 @@ Visual Studio 2022 (v143 toolset)。
   `ModelVertex`とバイト単位で一致させ、`ModelBinary::kVersion`を上げること。
 - Assimpの参照パスは `ModelConverter.vcxproj` の `AssimpRoot` プロパティ(`$(SolutionDir)..\GameEngine\Engine\external\Assimp\`)
   でハードコードしている。このリポジトリ自体は移設しない方針のため、このパスは今後も変更不要。
-- ツールを更新したら `GameEngine/Tools/ModelConverter/` の `ModelConverter.exe`/`assimp-vc143-mt.dll` を
+- ツールを更新したら `GameEngine/Tools/` の `ModelConverter.exe`/`assimp-vc143-mt.dll` を
   Releaseビルドの成果物で上書きコピーすること(自動化なし、手動同期)。
 - FBX内のテクスチャパス文字列は非ASCIIバイトを含みうるため、`std::filesystem::path`を経由させないこと
   (GameEngine本体の`CLAUDE.md`に記載の既知の落とし穴と同じ)。

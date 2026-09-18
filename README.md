@@ -1,6 +1,7 @@
 # ModelConverter
 
-FBX(Assimpが対応する各種3Dモデル形式)を、[GameEngine](../GameEngine)ランタイム用の独自バイナリ形式 `.mdl` に変換するオフラインCLIツールです。
+FBX(Assimpが対応する各種3Dモデル形式)を、[GameEngine](../GameEngine)ランタイム用の独自バイナリ形式
+`.mdl`(スケルトン+メッシュ)/ `.anm`(アニメーションクリップ)に変換するオフラインCLIツールです。
 
 ## 背景
 
@@ -33,9 +34,9 @@ GameEngineは現在、実行時に直接AssimpでFBXをパースしてモデル�
 ## 現在の配置について
 
 このリポジトリ(ソース一式)は `GameEngine` と兄弟フォルダ(`Desktop/ModelConverter`)に独立して置いています。
-GameEngine側には**ビルド済み成果物のみ**(`ModelConverter.exe` + `assimp-vc143-mt.dll`)を `GameEngine/Tools/ModelConverter/` に配置しており、
+GameEngine側には**ビルド済み成果物のみ**(`ModelConverter.exe` + `assimp-vc143-mt.dll`)を `GameEngine/Tools/` に配置しており、
 このリポジトリ自体をGameEngineへ移設したり、Git submoduleにする予定はありません(2026-09-04決定)。
-ツールを更新した場合は、Releaseビルドし直して成果物を手動コピーしてください(手順は `GameEngine/Tools/ModelConverter/README.md` 参照)。
+ツールを更新した場合は、Releaseビルドし直して成果物を手動コピーしてください(手順は `GameEngine/Tools/README.md` 参照)。
 
 ## ビルド
 
@@ -52,10 +53,20 @@ Visual Studio 2022 (v143 toolset)。
 ## 使い方
 
 ```powershell
-ModelConverter.exe <input.fbx> [output.mdl]
+# モデル(スケルトン + メッシュ + マテリアル) -> .mdl
+ModelConverter.exe <model.fbx> [output.mdl] [--dump]
+
+# アニメーションクリップ -> .anm (1FBX = 1クリップ。メッシュは無視)
+ModelConverter.exe --anim <clip.fbx> [output.anm] [--dump]
 ```
 
-`output.mdl` を省略した場合、入力ファイルと同じ場所・同じ名前で拡張子だけ `.mdl` になります。
+- 出力パスを省略した場合、入力ファイルと同じ場所・同じ名前で拡張子だけ `.mdl` / `.anm` になります
+- `--dump` を付けると、ボーン一覧(`.mdl`)やチャンネル一覧とキー数(`.anm`)を標準出力に表示します。
+  スケルトンとクリップのボーン名が一致しているかの目視確認に使えます
+- アニメーションFBXとモデルFBXは別ファイルで構いませんが、**ボーン名が一致している必要があります**
+  (Mixamo等、同じリグから書き出したもの)。`.anm` はボーン名でチャンネルを識別し、
+  エンジン側でモデルに紐付ける時に解決します
+- 1つのFBXに複数クリップが入っている場合は `<stem>_0.anm`, `<stem>_1.anm`, ... に分割されます
 
 ## バイナリフォーマット
 

@@ -110,6 +110,7 @@
     <ClCompile Include="Source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\BinaryAnimationFormat.hpp" />
     <ClInclude Include="Source\BinaryModelFormat.hpp" />
   </ItemGroup>
 
